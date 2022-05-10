@@ -1,16 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 import {
   IsDefined,
   IsEmail,
   IsNotEmpty,
   IsOptional,
   Length,
-} from 'class-validator';
+} from "class-validator";
 import {
   Exists,
   IsUnique,
   SameAs,
-} from '../../../common/decorators/validation.decorator';
+} from "../../../common/decorators/validation.decorator";
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -25,12 +25,12 @@ export class CreateUserDto {
   @ApiProperty()
   @IsEmail()
   @IsUnique(
-    'User',
-    'users',
+    "User",
+    "users",
     {},
     {
-      message: 'That email is taken',
-    },
+      message: "That email is taken",
+    }
   )
   email: string;
 
@@ -38,7 +38,7 @@ export class CreateUserDto {
   @IsDefined()
   @Length(6)
   @ApiProperty()
-  @SameAs('password_confirm', {
+  @SameAs("password_confirm", {
     message: "Password confirmation doesn't match.",
   })
   password: string;
@@ -54,18 +54,18 @@ export class CreateUserDto {
   phone: string;
 
   @Exists(
-    'Role',
-    'roles',
+    "Role",
+    "roles",
     {
-      field: 'id',
-      body_field: 'roleId',
+      field: "id",
+      body_field: "role_id",
     },
     {
       message: "Role with this id doesn't exists",
-    },
+    }
   )
   @ApiProperty()
-  roleId: string;
+  role_id: string;
 }
 
 export class UpdateUserDto {
@@ -81,12 +81,12 @@ export class UpdateUserDto {
   @IsEmail()
   @ApiProperty()
   @IsUnique(
-    'User',
-    'users',
+    "User",
+    "users",
     {},
     {
-      message: 'That email is taken',
-    },
+      message: "That email is taken",
+    }
   )
   email: string;
 

@@ -7,49 +7,55 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import { HashService } from '../../../services/hash/HashService';
-import { Exclude } from 'class-transformer';
-import { Role } from '../../role/entities/role.entity';
+} from "typeorm";
+import { HashService } from "../../../services/hash/HashService";
+import { Exclude } from "class-transformer";
+import { Role } from "../../role/entities/role.entity";
 
-@Entity('users')
+@Entity("users")
 export class User {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({
-    type: 'text',
-    nullable: true,
+    type: "text",
+    nullable: false,
   })
   first_name: string;
 
   @Column({
-    type: 'text',
-    nullable: true,
+    type: "text",
+    nullable: false,
   })
   last_name: string;
 
   @Column({
-    type: 'text',
+    type: "text",
     unique: true,
   })
   email: string;
 
-  @Column('text')
+  @Column("text")
   @Exclude()
   password: string;
 
   @Column({
-    type: 'text',
+    type: "text",
     nullable: true,
   })
   phone: string;
 
   @Column({
-    type: 'text',
+    type: "date",
     nullable: true,
   })
-  roleId: string;
+  birthday: Date;
+
+  @Column({
+    type: "text",
+    nullable: true,
+  })
+  role_id: string;
 
   @CreateDateColumn()
   created_at: Date;
@@ -64,7 +70,7 @@ export class User {
       this.password = await new HashService().make(this.password);
   }
   @ManyToOne((type) => Role, (role) => role.users, {
-    onDelete: 'CASCADE',
+    onDelete: "CASCADE",
   })
-  role: Promise<Role>;
+  role: Role;
 }
