@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "../entities/user.entity";
@@ -6,6 +11,12 @@ import { LoginUserDto, RegisterUserDto } from "./dto/register-user.dto";
 import { AuthServiceGeneral } from "../../../services/auth/AuthService";
 import { HashService } from "../../../services/hash/HashService";
 import { RoleService } from "../../../api/role/role.service";
+import {
+  ChangePasswordDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from "./dto/password-dto";
+import { UserService } from "../user.service";
 
 @Injectable()
 export class AuthService {
@@ -14,6 +25,7 @@ export class AuthService {
     private userRepository: Repository<User>,
     private readonly authService: AuthServiceGeneral,
     private readonly hashService: HashService,
+    private readonly userService: UserService,
     private readonly roleService: RoleService
   ) {}
 
@@ -69,8 +81,6 @@ export class AuthService {
       );
     }
 
-    console.log("user", user);
-
     return this.authService.sign(
       { userId: user.id, email: user.email },
       {
@@ -99,5 +109,116 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  public async forgotPassword(data: ForgotPasswordDto) {
+    const userExists = await this.userRepository
+      .createQueryBuilder("user")
+      .addSelect("user.password")
+      .where("user.email = :email", { email: data.email })
+      .getOne();
+
+    if (!userExists || !userExists.password) {
+      throw new HttpException("User does not exist!", HttpStatus.BAD_REQUEST);
+    }
+
+    const access_token = await this.authService.signForForgotPassword(
+      {
+        id: userExists.id,
+        email: userExists.email,
+      },
+      {
+        user: {
+          id: userExists.id,
+          email: userExists.email,
+        },
+      }
+    );
+
+    return {
+      user: userExists,
+      access_token,
+    };
+  }
+
+  public async setPassword(token: string, data: ResetPasswordDto, res: any) {
+    let userId: any;
+
+    try {
+      const decodedToken = await this.authService.verifyToken(token);
+
+      if (typeof decodedToken != "object") {
+        throw new BadRequestException();
+      }
+
+      userId = decodedToken.id;
+    } catch (error) {
+      if (error?.name === "TokenExpiredError") {
+        throw new BadRequestException("Set password token expired");
+      }
+      throw new BadRequestException("Bad Set password token");
+    }
+
+    const hashedPw = await new HashService().make(data.new_password);
+
+    await this.userRepository.update(
+      { id: userId },
+      {
+        password: hashedPw,
+      }
+    );
+
+    return res.json({
+      message: "Password updated successfully!",
+    });
+  }
+
+  public async resetPassword(data: ResetPasswordDto, token: string) {
+    let userId: number;
+
+    try {
+      const decodedToken = await this.authService.verifyToken(token);
+
+      if (typeof decodedToken != "object") {
+        throw new BadRequestException();
+      }
+
+      userId = decodedToken.userId;
+    } catch (error) {
+      if (error?.name === "TokenExpiredError") {
+        throw new BadRequestException("Reset password token expired");
+      }
+      throw new BadRequestException("Bad reset password token");
+    }
+
+    return {
+      message: "Password updated successfully!",
+      user: await this.userService.update(userId, {
+        password: data.new_password,
+      } as any),
+    };
+  }
+  public async changePassword(user: any, data: ChangePasswordDto) {
+    const userExists = await this.userRepository
+      .createQueryBuilder("user")
+      .addSelect("user.password")
+      .where("user.id =:id", { id: user.id })
+      .getOne();
+
+    if (
+      !(await this.hashService.compare(data.old_password, userExists.password))
+    ) {
+      throw new HttpException("Incorrect old password!", HttpStatus.CONFLICT);
+    }
+
+    return {
+      message: "Password changed successfully!",
+      user: await this.userService.update(
+        userExists.id as any,
+        {
+          password: data.new_password,
+        } as any
+      ),
+    };
   }
 }

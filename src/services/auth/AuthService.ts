@@ -1,18 +1,18 @@
-import { TokenPayload } from './interfaces/TokenPayload';
-import { Injectable } from '@nestjs/common';
-import { JWTProvider } from './Providers/JWTProvider';
+import { TokenPayload } from "./interfaces/TokenPayload";
+import { Injectable } from "@nestjs/common";
+import { JWTProvider } from "./Providers/JWTProvider";
 
 @Injectable()
 export class AuthServiceGeneral {
   private provider: any;
 
   public constructor() {
-    this.setProvider('jwt');
+    this.setProvider("jwt");
   }
 
   public setProvider(provider: string): this {
     switch (provider) {
-      case 'jwt':
+      case "jwt":
         this.provider = new JWTProvider();
 
       default:
@@ -27,8 +27,11 @@ export class AuthServiceGeneral {
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types
-  public signForForgotPassword(payload: object): TokenPayload {
-    return this.provider.signTokenForEmail(payload);
+  public signForForgotPassword(
+    payload: object,
+    dataToReturn: object
+  ): TokenPayload {
+    return this.provider.signTokenForEmail(payload, dataToReturn);
   }
 
   public verifyToken(token: string) {

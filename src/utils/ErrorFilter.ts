@@ -4,9 +4,9 @@ import {
   HttpException,
   ArgumentsHost,
   HttpStatus,
-} from '@nestjs/common';
-import { ValidationException } from '../common/exceptions/validation.exception';
-import { EntityNotFoundError } from 'typeorm/error/EntityNotFoundError';
+} from "@nestjs/common";
+import { ValidationException } from "../common/exceptions/validation.exception";
+import { EntityNotFoundError } from "typeorm/error/EntityNotFoundError";
 
 @Catch()
 export class ErrorFilter implements ExceptionFilter {
@@ -27,7 +27,7 @@ export class ErrorFilter implements ExceptionFilter {
     return host.switchToHttp().getResponse().status(status).json({
       error: message,
       status,
-      message: error['response'].message,
+      message: error["response"]?.message,
     });
   }
 

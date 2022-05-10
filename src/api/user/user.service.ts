@@ -1,16 +1,18 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { RegisterUserDto } from './auth/dto/register-user.dto';
-import { CreateUserDto } from './dto/user.dto';
-import { UpdateUserDto } from './dto/user.dto';
-import { User } from './entities/user.entity';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { AuthServiceGeneral } from "../../services/auth/AuthService";
+import { Repository } from "typeorm";
+import { RegisterUserDto } from "./auth/dto/register-user.dto";
+import { CreateUserDto } from "./dto/user.dto";
+import { UpdateUserDto } from "./dto/user.dto";
+import { User } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private readonly authService: AuthServiceGeneral
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -46,14 +48,14 @@ export class UserService {
   async remove(id: number) {
     await this.getRequestedUserOrFail(id);
     await this.userRepository.delete(id);
-    return { message: 'User was deleted successfully!' };
+    return { message: "User was deleted successfully!" };
   }
 
   async getRequestedUserOrFail(id: number) {
     const user = await this.userRepository.findOne(id);
 
     if (!user) {
-      throw new HttpException('User does not exists!', HttpStatus.NOT_FOUND);
+      throw new HttpException("User does not exists!", HttpStatus.NOT_FOUND);
     }
     return user;
   }
@@ -61,7 +63,7 @@ export class UserService {
   async checkIfEmailExists(email: string) {
     const user = await this.userRepository.findOne({ email });
     if (user) {
-      throw new HttpException('User already exists!', HttpStatus.FOUND);
+      throw new HttpException("User already exists!", HttpStatus.FOUND);
     }
     return user;
   }
