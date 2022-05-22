@@ -19,6 +19,7 @@ import {
   multerOptions,
 } from "./common/middlewares/multer.middleware";
 import { HashService } from "./services/hash/HashService";
+import { CategoryModule } from "./api/category/category.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { HashService } from "./services/hash/HashService";
     UserModule,
     RoleModule,
     UserModule,
+    CategoryModule,
     PermissionModule,
     NestEmitterModule.forRoot(new EventEmitter()),
     MailerModule.forRoot({
