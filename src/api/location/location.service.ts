@@ -1,6 +1,6 @@
 import { HttpException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { HttpStatus } from "src/common/enums/http-status.enum";
+import { HttpStatus } from "../../common/enums/http-status.enum";
 import { Repository } from "typeorm";
 import { CategoryService } from "../category/category.service";
 import { MediaMorph } from "../media/entities/media-morph.entity";

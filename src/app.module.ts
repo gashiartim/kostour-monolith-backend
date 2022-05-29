@@ -20,6 +20,7 @@ import {
 } from "./common/middlewares/multer.middleware";
 import { HashService } from "./services/hash/HashService";
 import { CategoryModule } from "./api/category/category.module";
+import { LocationsModule } from "./api/location/location.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CategoryModule } from "./api/category/category.module";
     UserModule,
     CategoryModule,
     PermissionModule,
+    LocationsModule,
     NestEmitterModule.forRoot(new EventEmitter()),
     MailerModule.forRoot({
       transport: {

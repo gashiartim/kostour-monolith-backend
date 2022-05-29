@@ -16,7 +16,7 @@ import { UpdateLocationDto } from "./dto/update-location.dto";
 import { ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { AuthGuard } from "../../common/guards/auth.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { LoggedUser } from "src/common/decorators/user.decorator";
+import { LoggedUser } from "../../common/decorators/user.decorator";
 
 @ApiTags("Locations")
 @Controller("locations")
