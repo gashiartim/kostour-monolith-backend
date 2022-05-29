@@ -87,8 +87,109 @@ export class LocationsService {
   }
 
   async findOne(id: string) {
-    const locationExists = await this.locationRepo
+    const locationExists = await this.getLocationOrFail(id);
+
+    await this.locationRepo.save(
+      Object.assign(
+        {},
+        { ...locationExists, numberOfVisits: locationExists.numberOfVisits + 1 }
+      )
+    );
+
+    if (!locationExists)
+      throw new HttpException(
+        "Location with this id doesn't exist!",
+        HttpStatus.NOT_FOUND
+      );
+
+    return locationExists;
+  }
+
+  async update(
+    id: string,
+    updateLocationDto: UpdateLocationDto,
+    file?: Express.Multer.File
+  ) {
+    const location = await this.getLocationOrFail(id);
+
+    const { categories: categoryIds } = updateLocationDto;
+
+    const categories = await this.categoryService.getCategories(
+      categoryIds || []
+    );
+
+    if (
+      updateLocationDto.categories &&
+      categories.length !== updateLocationDto.categories.length
+    ) {
+      throw new HttpException(
+        "There are non-existing categories.",
+        HttpStatus.NOT_FOUND
+      );
+    }
+
+    await this.locationRepo.save(
+      Object.assign(location, { ...updateLocationDto })
+    );
+
+    if (file) {
+      await this.mediaService.deleteEntityPhoto(id);
+
+      await this.mediaService.uploadFileAndAttachEntity(
+        file,
+        {
+          entity: "location",
+          entity_id: location.id,
+          related_field: "thumbnail",
+        },
+        location.id
+      );
+    }
+
+    return await this.locationRepo
       .createQueryBuilder("location")
+      .leftJoinAndMapOne(
+        "location.thumbnail",
+        MediaMorph,
+        "thumbnail",
+        "thumbnail.entity_id = location.id AND thumbnail.entity = (:entity)",
+        { entity: "location" }
+      )
+      .leftJoinAndSelect("thumbnail.media", "media")
+      .where({ id })
+      .getOne();
+  }
+
+  async remove(id: string) {
+    await this.getLocationOrFail(id);
+
+    await this.locationRepo
+      .createQueryBuilder()
+      .delete()
+      .where({ id })
+      .execute();
+
+    await this.mediaService.deleteEntityPhoto(id);
+
+    return {
+      success: true,
+    };
+  }
+
+  async checkIfLocationAlreadyExists(name: string) {
+    const locationExists = await this.locationRepo.findOne({ name });
+
+    if (locationExists) {
+      throw new HttpException(
+        "Location already exists",
+        HttpStatus.UNPROCESSABLE_ENTITY
+      );
+    }
+  }
+
+  async getLocationOrFail(id: string) {
+    const locationExists = await this.locationRepo
+      .createQueryBuilder()
       .leftJoinAndSelect("location.categories", "category")
       .leftJoinAndMapOne(
         "category.thumbnail",
@@ -108,38 +209,10 @@ export class LocationsService {
       .where({ id })
       .getOne();
 
-    await this.locationRepo.save(
-      Object.assign(
-        {},
-        { ...locationExists, numberOfVisits: locationExists.numberOfVisits + 1 }
-      )
-    );
-
-    if (!locationExists)
-      throw new HttpException(
-        "Product with this id doesn't exist!",
-        HttpStatus.NOT_FOUND
-      );
+    if (!locationExists) {
+      throw new HttpException("Location does not exist!", HttpStatus.NOT_FOUND);
+    }
 
     return locationExists;
-  }
-
-  update(id: string, updateLocationDto: UpdateLocationDto) {
-    return `This action updates a #${id} location`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} location`;
-  }
-
-  async checkIfLocationAlreadyExists(name: string) {
-    const locationExists = await this.locationRepo.findOne({ name });
-
-    if (locationExists) {
-      throw new HttpException(
-        "Location already exists",
-        HttpStatus.UNPROCESSABLE_ENTITY
-      );
-    }
   }
 }

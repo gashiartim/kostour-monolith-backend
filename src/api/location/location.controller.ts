@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from "@nestjs/common";
 import { LocationsService } from "./location.service";
 import { CreateLocationDto } from "./dto/create-location.dto";
@@ -24,8 +25,8 @@ export class LocationController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Post()
+  @UseGuards(new AuthGuard())
   @ApiConsumes("multipart/form-data")
-  // @UseGuards(new AuthGuard())
   @UseInterceptors(FileInterceptor("thumbnail"))
   create(
     @Body() createLocationDto: CreateLocationDto,
@@ -47,15 +48,27 @@ export class LocationController {
   }
 
   @Patch(":id")
+  @UseGuards(new AuthGuard())
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("thumbnail"))
   update(
     @Param("id") id: string,
-    @Body() updateLocationDto: UpdateLocationDto
+    @Body() updateLocationDto: UpdateLocationDto,
+    @UploadedFile()
+    file: Express.Multer.File
   ) {
-    return this.locationsService.update(id, updateLocationDto);
+    return this.locationsService.update(id, updateLocationDto, file);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.locationsService.remove(+id);
+  @UseGuards(new AuthGuard())
+  async remove(@Param("id") id: string, @Res() res) {
+    const result = await this.locationsService.remove(id);
+
+    if (result.success) {
+      return res.json({
+        message: "Location was deleted successfully!",
+      });
+    }
   }
 }
