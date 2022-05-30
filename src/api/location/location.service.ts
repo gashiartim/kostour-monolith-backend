@@ -109,8 +109,8 @@ export class LocationsService {
         "location.images",
         MediaMorph,
         "images",
-        "images.entity_id = location.id AND images.entity = (:entity)",
-        { entity: "location" }
+        "images.entity_id = location.id AND images.entity = (:entity) AND images.related_field = (:related_field)",
+        { entity: "location", related_field: "images" }
       )
       .leftJoinAndSelect("images.media", "images_media")
       .where({ id: newLocation.id })
@@ -134,13 +134,11 @@ export class LocationsService {
       .leftJoinAndMapMany(
         "location.images",
         MediaMorph,
-        "image",
-        "image.entity_id = location.id AND image.entity = (:entity)",
-        {
-          entity: "location",
-        }
+        "images",
+        "images.entity_id = location.id AND images.entity = (:entity) AND images.related_field = (:related_field)",
+        { entity: "location", related_field: "images" }
       )
-      .leftJoinAndSelect("image.media", "image_media");
+      .leftJoinAndSelect("images.media", "images_media");
 
     applyPaginationToBuilder(queryBuilder, pagination.limit, pagination.page);
 
@@ -262,6 +260,14 @@ export class LocationsService {
         { entity: "location" }
       )
       .leftJoinAndSelect("thumbnail.media", "media")
+      .leftJoinAndMapMany(
+        "location.images",
+        MediaMorph,
+        "images",
+        "images.entity_id = location.id AND images.entity = (:entity) AND images.related_field = (:related_field)",
+        { entity: "location", related_field: "images" }
+      )
+      .leftJoinAndSelect("images.media", "images_media")
       .where({ id })
       .getOne();
 

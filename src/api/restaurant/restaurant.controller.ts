@@ -11,6 +11,7 @@ import {
   UploadedFile,
   Res,
   Query,
+  UploadedFiles,
 } from "@nestjs/common";
 import { RestaurantService } from "./restaurant.service";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
@@ -22,7 +23,10 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { FileInterceptor } from "@nestjs/platform-express";
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from "@nestjs/platform-express";
 import { Restaurant } from "./entities/restaurant.entity";
 import { CreatedRestaurantDto } from "./dto/created-restaurant.dto";
 import { PaginationOptions } from "src/common/decorators/pagination.decorator";
@@ -41,13 +45,21 @@ export class RestaurantController {
   })
   @UseGuards(new AuthGuard())
   @ApiConsumes("multipart/form-data")
-  @UseInterceptors(FileInterceptor("thumbnail"))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "thumbnail", maxCount: 1 },
+      { name: "images", maxCount: 10 },
+    ])
+  )
   create(
     @Body() createRestaurantDto: CreateRestaurantDto,
-    @UploadedFile()
-    file: Express.Multer.File
+    @UploadedFiles()
+    files: {
+      thumbnail?: Express.Multer.File;
+      images?: Express.Multer.File[];
+    }
   ): Promise<Restaurant> {
-    return this.restaurantService.create(createRestaurantDto, file);
+    return this.restaurantService.create(createRestaurantDto, files);
   }
 
   @Get()

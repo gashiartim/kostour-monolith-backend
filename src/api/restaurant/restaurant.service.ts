@@ -19,7 +19,10 @@ export class RestaurantService {
 
   async create(
     createRestaurantDto: CreateRestaurantDto,
-    file?: Express.Multer.File
+    files?: {
+      thumbnail?: Express.Multer.File;
+      images?: Express.Multer.File[];
+    }
   ) {
     await this.checkIfRestaurantAlreadyExists(createRestaurantDto.name);
 
@@ -31,13 +34,25 @@ export class RestaurantService {
 
     await this.restaurantRepo.save(newRestaurant);
 
-    if (file) {
-      await this.mediaService.uploadFileAndAttachEntity(
-        file,
+    if (files && files.thumbnail) {
+      await this.mediaService.uploadFilesAndAttachEntity(
+        files.thumbnail,
         {
           entity: "restaurant",
           entity_id: newRestaurant.id,
           related_field: "thumbnail",
+        },
+        newRestaurant.id
+      );
+    }
+
+    if (files && files.images) {
+      await this.mediaService.uploadFilesAndAttachEntity(
+        files.images,
+        {
+          entity: "restaurant",
+          entity_id: newRestaurant.id,
+          related_field: "images",
         },
         newRestaurant.id
       );
@@ -55,6 +70,14 @@ export class RestaurantService {
         }
       )
       .leftJoinAndSelect("thumbnail.media", "media")
+      .leftJoinAndMapMany(
+        "restaurant.images",
+        MediaMorph,
+        "images",
+        "images.entity_id = restaurant.id AND images.entity = (:entity) AND images.related_field = (:related_field)",
+        { entity: "restaurant", related_field: "images" }
+      )
+      .leftJoinAndSelect("images.media", "images_media")
       .where({ id: newRestaurant.id })
       .getOne();
   }
@@ -72,7 +95,15 @@ export class RestaurantService {
           entity: "restaurant",
         }
       )
-      .leftJoinAndSelect("thumbnail.media", "media");
+      .leftJoinAndSelect("thumbnail.media", "media")
+      .leftJoinAndMapMany(
+        "restaurant.images",
+        MediaMorph,
+        "images",
+        "images.entity_id = restaurant.id AND images.entity = (:entity) AND images.related_field = (:related_field)",
+        { entity: "restaurant", related_field: "images" }
+      )
+      .leftJoinAndSelect("images.media", "images_media");
 
     applyPaginationToBuilder(queryBuilder, pagination.limit, pagination.page);
 
