@@ -76,7 +76,6 @@ export class CategoryService {
         { entity: "category" }
       )
       .leftJoinAndSelect("thumbnail.media", "media")
-      .leftJoinAndSelect("category.links", "links")
       .where({ id: category.id })
       .getOne();
   }
@@ -96,7 +95,6 @@ export class CategoryService {
         "sub_sub_categories",
         "sub_sub_categories.parent_id = sub_categories.id"
       )
-      .leftJoinAndSelect("category.links", "links")
       .leftJoinAndMapOne(
         "category.thumbnail",
         MediaMorph,
@@ -143,7 +141,6 @@ export class CategoryService {
         "pc",
         "pc.id = category.parent_id"
       )
-      .leftJoinAndSelect("category.links", "links")
       .leftJoinAndMapOne(
         "pc.thumbnail",
         MediaMorph,

@@ -29,7 +29,6 @@ export class LocationsService {
       name,
       categories: categoryIds,
       description,
-      thumbnail,
       whatCanYouDo,
     } = createLocationDto;
 
@@ -37,7 +36,7 @@ export class LocationsService {
       categoryIds || []
     );
 
-    const newLocation = await this.locationRepo.create({
+    const newLocation = this.locationRepo.create({
       name,
       description,
       whatCanYouDo,
@@ -64,7 +63,7 @@ export class LocationsService {
           entity_id: newLocation.id,
           related_field: "thumbnail",
         },
-        user.id
+        newLocation.id
       );
     }
 
@@ -74,7 +73,7 @@ export class LocationsService {
         "location.thumbnail",
         MediaMorph,
         "thumbnail",
-        "thumbnail.entity_id = p.id AND thumbnail.entity = (:entity)",
+        "thumbnail.entity_id = location.id AND thumbnail.entity = (:entity)",
         { entity: "location" }
       )
       .leftJoinAndSelect("thumbnail.media", "media")
@@ -83,7 +82,19 @@ export class LocationsService {
   }
 
   async findAll() {
-    return await this.locationRepo.find();
+    return await this.locationRepo
+      .createQueryBuilder("location")
+      .leftJoinAndMapOne(
+        "location.thumbnail",
+        MediaMorph,
+        "thumbnail",
+        "thumbnail.entity_id = location.id AND thumbnail.entity = (:entity)",
+        {
+          entity: "location",
+        }
+      )
+      .leftJoinAndSelect("thumbnail.media", "media")
+      .getMany();
   }
 
   async findOne(id: string) {
@@ -198,6 +209,7 @@ export class LocationsService {
         "category_thumbnail.entity_id = category.id AND category_thumbnail.entity = (:entity)",
         { entity: "category" }
       )
+      .leftJoinAndSelect("category_thumbnail.media", "media")
       .leftJoinAndMapOne(
         "location.thumbnail",
         MediaMorph,

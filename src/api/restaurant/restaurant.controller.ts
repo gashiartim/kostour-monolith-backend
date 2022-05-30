@@ -1,0 +1,92 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Res,
+} from "@nestjs/common";
+import { RestaurantService } from "./restaurant.service";
+import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
+import { UpdateRestaurantDto } from "./dto/update-restaurant.dto";
+import { AuthGuard } from "../../common/guards/auth.guard";
+import {
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { Restaurant } from "./entities/restaurant.entity";
+import { CreatedRestaurantDto } from "./dto/created-restaurant.dto";
+
+@ApiTags("Resturants")
+@Controller("api/restaurants")
+export class RestaurantController {
+  constructor(private readonly restaurantService: RestaurantService) {}
+
+  @Post()
+  @ApiCreatedResponse({
+    status: 201,
+    type: CreatedRestaurantDto,
+  })
+  @UseGuards(new AuthGuard())
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("thumbnail"))
+  create(
+    @Body() createRestaurantDto: CreateRestaurantDto,
+    @UploadedFile()
+    file: Express.Multer.File
+  ): Promise<Restaurant> {
+    return this.restaurantService.create(createRestaurantDto, file);
+  }
+
+  @Get()
+  @ApiResponse({
+    description: "Array of restaurants",
+    status: 200,
+    type: CreatedRestaurantDto,
+    isArray: true,
+  })
+  findAll() {
+    return this.restaurantService.findAll();
+  }
+
+  @Get(":id")
+  @ApiResponse({
+    description: "Restaurant object",
+    status: 200,
+    type: CreatedRestaurantDto,
+  })
+  findOne(@Param("id") id: string) {
+    return this.restaurantService.findOne(id);
+  }
+
+  @Patch(":id")
+  @UseGuards(new AuthGuard())
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FileInterceptor("thumbnail"))
+  update(
+    @Param("id") id: string,
+    @Body() updateRestaurantDto: UpdateRestaurantDto,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    return this.restaurantService.update(id, updateRestaurantDto, file);
+  }
+
+  @Delete(":id")
+  async remove(@Param("id") id: string, @Res() res) {
+    const result = await this.restaurantService.remove(id);
+
+    if (result.success) {
+      return res.json({
+        message: "Restaurant was deleted successfully!",
+      });
+    }
+  }
+}

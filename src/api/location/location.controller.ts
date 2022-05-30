@@ -20,7 +20,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { LoggedUser } from "../../common/decorators/user.decorator";
 
 @ApiTags("Locations")
-@Controller("locations")
+@Controller("api/locations")
 export class LocationController {
   constructor(private readonly locationsService: LocationsService) {}
 

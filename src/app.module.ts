@@ -21,6 +21,7 @@ import {
 import { HashService } from "./services/hash/HashService";
 import { CategoryModule } from "./api/category/category.module";
 import { LocationsModule } from "./api/location/location.module";
+import { RestaurantModule } from "./api/restaurant/restaurant.module";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { LocationsModule } from "./api/location/location.module";
     CategoryModule,
     PermissionModule,
     LocationsModule,
+    RestaurantModule,
     NestEmitterModule.forRoot(new EventEmitter()),
     MailerModule.forRoot({
       transport: {
@@ -57,6 +59,7 @@ import { LocationsModule } from "./api/location/location.module";
       ...multerConfig,
       ...multerOptions,
     }),
+    RestaurantModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService, HashService],
