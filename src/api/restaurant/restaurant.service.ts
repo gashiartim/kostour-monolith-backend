@@ -1,9 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { applyPaginationToBuilder } from "src/common/PaginationHelpers";
 import { Repository } from "typeorm";
 import { MediaMorph } from "../media/entities/media-morph.entity";
 import { MediaService } from "../media/media.service";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
+import { RestaurantFiltersDto } from "./dto/restaurant-filters";
 import { UpdateRestaurantDto } from "./dto/update-restaurant.dto";
 import { Restaurant } from "./entities/restaurant.entity";
 
@@ -57,8 +59,8 @@ export class RestaurantService {
       .getOne();
   }
 
-  async findAll() {
-    return await this.restaurantRepo
+  async findAll(pagination: any, options: RestaurantFiltersDto) {
+    const queryBuilder = await this.restaurantRepo
       .createQueryBuilder("restaurant")
       .leftJoinAndSelect("restaurant.location", "location")
       .leftJoinAndMapOne(
@@ -70,8 +72,11 @@ export class RestaurantService {
           entity: "restaurant",
         }
       )
-      .leftJoinAndSelect("thumbnail.media", "media")
-      .getMany();
+      .leftJoinAndSelect("thumbnail.media", "media");
+
+    applyPaginationToBuilder(queryBuilder, pagination.limit, pagination.page);
+
+    return await queryBuilder.getManyAndCount();
   }
 
   async findOne(id: string) {

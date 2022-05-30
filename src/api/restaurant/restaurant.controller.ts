@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  Query,
 } from "@nestjs/common";
 import { RestaurantService } from "./restaurant.service";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
@@ -24,6 +25,9 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Restaurant } from "./entities/restaurant.entity";
 import { CreatedRestaurantDto } from "./dto/created-restaurant.dto";
+import { PaginationOptions } from "src/common/decorators/pagination.decorator";
+import { RestaurantFiltersDto } from "./dto/restaurant-filters";
+import { PaginationInterceptor } from "src/common/interceptors/pagination.interceptor";
 
 @ApiTags("Resturants")
 @Controller("api/restaurants")
@@ -53,8 +57,12 @@ export class RestaurantController {
     type: CreatedRestaurantDto,
     isArray: true,
   })
-  findAll() {
-    return this.restaurantService.findAll();
+  @UseInterceptors(PaginationInterceptor)
+  findAll(
+    @Query() options: RestaurantFiltersDto,
+    @PaginationOptions() pagination
+  ) {
+    return this.restaurantService.findAll(pagination, options);
   }
 
   @Get(":id")

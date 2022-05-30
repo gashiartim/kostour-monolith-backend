@@ -10,14 +10,20 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  UploadedFiles,
 } from "@nestjs/common";
 import { LocationsService } from "./location.service";
 import { CreateLocationDto } from "./dto/create-location.dto";
 import { UpdateLocationDto } from "./dto/update-location.dto";
 import { ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { AuthGuard } from "../../common/guards/auth.guard";
-import { FileInterceptor } from "@nestjs/platform-express";
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from "@nestjs/platform-express";
 import { LoggedUser } from "../../common/decorators/user.decorator";
+import { PaginationInterceptor } from "src/common/interceptors/pagination.interceptor";
+import { PaginationOptions } from "src/common/decorators/pagination.decorator";
 
 @ApiTags("Locations")
 @Controller("api/locations")
@@ -27,19 +33,28 @@ export class LocationController {
   @Post()
   @UseGuards(new AuthGuard())
   @ApiConsumes("multipart/form-data")
-  @UseInterceptors(FileInterceptor("thumbnail"))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "thumbnail", maxCount: 1 },
+      { name: "images", maxCount: 10 },
+    ])
+  )
   create(
     @Body() createLocationDto: CreateLocationDto,
     @LoggedUser() user: any,
-    @UploadedFile()
-    file: Express.Multer.File
+    @UploadedFiles()
+    files: {
+      thumbnail?: Express.Multer.File;
+      images?: Express.Multer.File[];
+    }
   ) {
-    return this.locationsService.create(createLocationDto, user, file);
+    return this.locationsService.create(createLocationDto, user, files);
   }
 
   @Get()
-  findAll() {
-    return this.locationsService.findAll();
+  @UseInterceptors(PaginationInterceptor)
+  findAll(@PaginationOptions() pagination) {
+    return this.locationsService.findAll(pagination);
   }
 
   @Get(":id")

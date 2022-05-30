@@ -8,6 +8,8 @@ import { MediaService } from "../media/media.service";
 import { CreateLocationDto } from "./dto/create-location.dto";
 import { UpdateLocationDto } from "./dto/update-location.dto";
 import { Location } from "./entities/location.entity";
+import { applyPaginationToBuilder } from "src/common/PaginationHelpers";
+import { Category } from "../category/entities/category.entity";
 
 @Injectable()
 export class LocationsService {
@@ -21,7 +23,10 @@ export class LocationsService {
   async create(
     createLocationDto: CreateLocationDto,
     user: any,
-    file?: Express.Multer.File
+    files?: {
+      thumbnail?: Express.Multer.File;
+      images?: Express.Multer.File[];
+    }
   ) {
     await this.checkIfLocationAlreadyExists(createLocationDto.name);
 
@@ -55,9 +60,9 @@ export class LocationsService {
       );
     }
 
-    if (file) {
-      await this.mediaService.uploadFileAndAttachEntity(
-        file,
+    if (files && files.thumbnail) {
+      await this.mediaService.uploadFilesAndAttachEntity(
+        files.thumbnail,
         {
           entity: "location",
           entity_id: newLocation.id,
@@ -67,8 +72,31 @@ export class LocationsService {
       );
     }
 
+    if (files && files.images) {
+      await this.mediaService.uploadFilesAndAttachEntity(
+        files.images,
+        {
+          entity: "location",
+          entity_id: newLocation.id,
+          related_field: "images",
+        },
+        newLocation.id
+      );
+    }
+
     return await this.locationRepo
       .createQueryBuilder("location")
+      .leftJoinAndSelect("location.categories", "category")
+      .leftJoinAndMapOne(
+        "category.thumbnail",
+        MediaMorph,
+        "category_thumbnail",
+        "category_thumbnail.entity_id = category.id AND category_thumbnail.entity = (:entity)",
+        {
+          entity: "category",
+        }
+      )
+      .leftJoinAndSelect("category_thumbnail.media", "category_thumbnail_media")
       .leftJoinAndMapOne(
         "location.thumbnail",
         MediaMorph,
@@ -77,13 +105,22 @@ export class LocationsService {
         { entity: "location" }
       )
       .leftJoinAndSelect("thumbnail.media", "media")
+      .leftJoinAndMapMany(
+        "location.images",
+        MediaMorph,
+        "images",
+        "images.entity_id = location.id AND images.entity = (:entity)",
+        { entity: "location" }
+      )
+      .leftJoinAndSelect("images.media", "images_media")
       .where({ id: newLocation.id })
       .getOne();
   }
 
-  async findAll() {
-    return await this.locationRepo
+  async findAll(pagination: any) {
+    const queryBuilder = await this.locationRepo
       .createQueryBuilder("location")
+      .leftJoinAndSelect("location.categories", "category")
       .leftJoinAndMapOne(
         "location.thumbnail",
         MediaMorph,
@@ -94,7 +131,20 @@ export class LocationsService {
         }
       )
       .leftJoinAndSelect("thumbnail.media", "media")
-      .getMany();
+      .leftJoinAndMapMany(
+        "location.images",
+        MediaMorph,
+        "image",
+        "image.entity_id = location.id AND image.entity = (:entity)",
+        {
+          entity: "location",
+        }
+      )
+      .leftJoinAndSelect("image.media", "image_media");
+
+    applyPaginationToBuilder(queryBuilder, pagination.limit, pagination.page);
+
+    return queryBuilder.getManyAndCount();
   }
 
   async findOne(id: string) {
@@ -106,12 +156,6 @@ export class LocationsService {
         { ...locationExists, numberOfVisits: locationExists.numberOfVisits + 1 }
       )
     );
-
-    if (!locationExists)
-      throw new HttpException(
-        "Location with this id doesn't exist!",
-        HttpStatus.NOT_FOUND
-      );
 
     return locationExists;
   }
@@ -200,7 +244,7 @@ export class LocationsService {
 
   async getLocationOrFail(id: string) {
     const locationExists = await this.locationRepo
-      .createQueryBuilder()
+      .createQueryBuilder("location")
       .leftJoinAndSelect("location.categories", "category")
       .leftJoinAndMapOne(
         "category.thumbnail",
@@ -209,12 +253,12 @@ export class LocationsService {
         "category_thumbnail.entity_id = category.id AND category_thumbnail.entity = (:entity)",
         { entity: "category" }
       )
-      .leftJoinAndSelect("category_thumbnail.media", "media")
+      .leftJoinAndSelect("category_thumbnail.media", "category_media")
       .leftJoinAndMapOne(
         "location.thumbnail",
         MediaMorph,
         "thumbnail",
-        "thumbnail.entity_id = p.id AND thumbnail.entity = (:entity)",
+        "thumbnail.entity_id = location.id AND thumbnail.entity = (:entity)",
         { entity: "location" }
       )
       .leftJoinAndSelect("thumbnail.media", "media")
