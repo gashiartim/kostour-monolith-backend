@@ -22,11 +22,16 @@ import { HashService } from "./services/hash/HashService";
 import { CategoryModule } from "./api/category/category.module";
 import { LocationsModule } from "./api/location/location.module";
 import { RestaurantModule } from "./api/restaurant/restaurant.module";
+import { join } from "path";
+import { ServeStaticModule } from "@nestjs/serve-static";
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
     ConfigModule.forRoot(),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, "../"),
+    }),
     UserModule,
     RoleModule,
     UserModule,
