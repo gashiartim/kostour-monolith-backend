@@ -11,6 +11,7 @@ import {
   UploadedFile,
   Res,
   UploadedFiles,
+  Query,
 } from "@nestjs/common";
 import { LocationsService } from "./location.service";
 import { CreateLocationDto } from "./dto/create-location.dto";
@@ -24,6 +25,7 @@ import {
 import { LoggedUser } from "../../common/decorators/user.decorator";
 import { PaginationInterceptor } from "src/common/interceptors/pagination.interceptor";
 import { PaginationOptions } from "src/common/decorators/pagination.decorator";
+import { LocationFiltersDto } from "./dto/location-filter.dto";
 
 @ApiTags("Locations")
 @Controller("api/locations")
@@ -53,8 +55,11 @@ export class LocationController {
 
   @Get()
   @UseInterceptors(PaginationInterceptor)
-  findAll(@PaginationOptions() pagination) {
-    return this.locationsService.findAll(pagination);
+  findAll(
+    @Query() filters: LocationFiltersDto,
+    @PaginationOptions() pagination
+  ) {
+    return this.locationsService.findAll(filters, pagination);
   }
 
   @Get(":id")

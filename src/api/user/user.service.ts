@@ -25,19 +25,27 @@ export class UserService {
   }
 
   async findAll() {
-    return await this.userRepository.findAndCount();
+    const users = await this.userRepository
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.role", "role")
+      .getMany();
+
+    return {
+      data: users,
+      total: users.length,
+    };
   }
 
   async profile(data: RegisterUserDto): Promise<User> {
     return await this.findUserByEmail(data.email);
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return await this.getRequestedUserOrFail(id);
   }
 
   //TODO: Email update and also validation
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
     await this.getRequestedUserOrFail(id);
 
     await this.userRepository.update(id, updateUserDto);
@@ -45,14 +53,19 @@ export class UserService {
     return await this.userRepository.findOne(id);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     await this.getRequestedUserOrFail(id);
     await this.userRepository.delete(id);
     return { message: "User was deleted successfully!" };
   }
 
-  async getRequestedUserOrFail(id: number) {
-    const user = await this.userRepository.findOne(id);
+  async getRequestedUserOrFail(id: string) {
+    // const user = await this.userRepository.findOne(id);
+    const user = await this.userRepository
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.role", "role")
+      .where({ id })
+      .getOne();
 
     if (!user) {
       throw new HttpException("User does not exists!", HttpStatus.NOT_FOUND);

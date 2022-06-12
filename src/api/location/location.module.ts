@@ -13,10 +13,17 @@ import {
   multerConfig,
   multerOptions,
 } from "src/common/middlewares/multer.middleware";
+import { Restaurant } from "../restaurant/entities/restaurant.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Location, Media, Category, MediaMorph]),
+    TypeOrmModule.forFeature([
+      Location,
+      Media,
+      Category,
+      MediaMorph,
+      Restaurant,
+    ]),
     MulterModule.register({ ...multerConfig, ...multerOptions }),
   ],
   controllers: [LocationController],

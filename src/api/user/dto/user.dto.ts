@@ -80,14 +80,6 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEmail()
   @ApiProperty()
-  @IsUnique(
-    "User",
-    "users",
-    {},
-    {
-      message: "That email is taken",
-    }
-  )
   email: string;
 
   @IsOptional()

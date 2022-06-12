@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Restaurant } from "../../../api/restaurant/entities/restaurant.entity";
 
 @Entity("locations")
 export class Location {
@@ -26,7 +27,9 @@ export class Location {
   @Column({ nullable: false, type: "integer", default: 0 })
   numberOfVisits: string;
 
-  // @Column({ nullable: false })
+  @ManyToMany((type) => Restaurant)
+  @JoinTable()
+  restaurants: Restaurant[];
 
   @ManyToMany((type) => Category)
   @JoinTable()

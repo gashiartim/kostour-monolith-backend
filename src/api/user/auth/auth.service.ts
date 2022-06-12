@@ -66,6 +66,8 @@ export class AuthService {
   public async login(data: LoginUserDto) {
     const user = await this.userRepository
       .createQueryBuilder("user")
+      .select()
+      .addSelect("user.password")
       .leftJoinAndSelect("user.role", "role")
       .where({ email: data.email })
       .getOne();
@@ -174,7 +176,7 @@ export class AuthService {
   }
 
   public async resetPassword(data: ResetPasswordDto, token: string) {
-    let userId: number;
+    let userId: string;
 
     try {
       const decodedToken = await this.authService.verifyToken(token);

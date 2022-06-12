@@ -30,8 +30,12 @@ export class Restaurant {
   @JoinColumn({ name: "location_id" })
   location: Location;
 
-  @Column({ nullable: false })
+  @Column({ nullable: true })
   location_id: string;
+
+  @ManyToMany((type) => Category)
+  @JoinTable()
+  categories: Category[];
 
   @CreateDateColumn({
     type: "timestamp",

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { IsArray, IsString } from "class-validator";
 
 export class CreateRestaurantDto {
   @ApiProperty()
@@ -20,4 +20,8 @@ export class CreateRestaurantDto {
 
   @ApiPropertyOptional()
   thumbnail: any;
+
+  @ApiProperty()
+  @IsArray()
+  categories: string[];
 }

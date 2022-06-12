@@ -1,7 +1,7 @@
-import { HttpException, Injectable } from "@nestjs/common";
+import { HttpException, Injectable, Options } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { HttpStatus } from "../../common/enums/http-status.enum";
-import { Repository } from "typeorm";
+import { Brackets, Repository } from "typeorm";
 import { CategoryService } from "../category/category.service";
 import { MediaMorph } from "../media/entities/media-morph.entity";
 import { MediaService } from "../media/media.service";
@@ -10,6 +10,8 @@ import { UpdateLocationDto } from "./dto/update-location.dto";
 import { Location } from "./entities/location.entity";
 import { applyPaginationToBuilder } from "src/common/PaginationHelpers";
 import { Category } from "../category/entities/category.entity";
+import { LocationFiltersDto } from "./dto/location-filter.dto";
+import { Restaurant } from "../restaurant/entities/restaurant.entity";
 
 @Injectable()
 export class LocationsService {
@@ -117,7 +119,7 @@ export class LocationsService {
       .getOne();
   }
 
-  async findAll(pagination: any) {
+  async findAll(filters: LocationFiltersDto, pagination: any) {
     const queryBuilder = await this.locationRepo
       .createQueryBuilder("location")
       .leftJoinAndSelect("location.categories", "category")
@@ -139,6 +141,22 @@ export class LocationsService {
         { entity: "location", related_field: "images" }
       )
       .leftJoinAndSelect("images.media", "images_media");
+
+    if (filters.category_id) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.andWhere("category.id =:category_id", {
+            category_id: filters.category_id,
+          });
+        })
+      );
+    }
+
+    if (filters.name) {
+      queryBuilder.andWhere("location.name ilike :location_name", {
+        location_name: `%${filters.name}%`,
+      });
+    }
 
     applyPaginationToBuilder(queryBuilder, pagination.limit, pagination.page);
 
@@ -268,6 +286,22 @@ export class LocationsService {
         { entity: "location", related_field: "images" }
       )
       .leftJoinAndSelect("images.media", "images_media")
+      .leftJoinAndMapMany(
+        "location.restaurants",
+        Restaurant,
+        "restaurant",
+        "restaurant.location_id = location.id"
+      )
+      .leftJoinAndMapOne(
+        "restaurant.thumbnail",
+        MediaMorph,
+        "restaurant_thumbnail",
+        "restaurant_thumbnail.entity_id = restaurant.id AND restaurant_thumbnail.entity = (:entity)",
+        {
+          entity: "restaurant",
+        }
+      )
+      .leftJoinAndSelect("restaurant_thumbnail.media", "restaurant_media")
       .where({ id })
       .getOne();
 

@@ -1,18 +1,18 @@
-import slugify from 'slugify';
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateRoleDto } from './dto/role.dto';
-import { UpdateRoleDto } from './dto/role.dto';
-import { Role } from './entities/role.entity';
-import { HttpException, HttpStatus } from '@nestjs/common';
-import { Permission } from '../permission/entities/permission.entity';
+import slugify from "slugify";
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CreateRoleDto } from "./dto/role.dto";
+import { UpdateRoleDto } from "./dto/role.dto";
+import { Role } from "./entities/role.entity";
+import { HttpException, HttpStatus } from "@nestjs/common";
+import { Permission } from "../permission/entities/permission.entity";
 
 @Injectable()
 export class RoleService {
   constructor(
     @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
+    private roleRepository: Repository<Role>
   ) {}
 
   async create(data: CreateRoleDto): Promise<any> {
@@ -20,7 +20,7 @@ export class RoleService {
 
     const roleExists = await this.getRoleBySlug(data.name);
     if (roleExists) {
-      throw new HttpException('Already exists!', HttpStatus.BAD_REQUEST);
+      throw new HttpException("Already exists!", HttpStatus.BAD_REQUEST);
     }
 
     const role = await this.roleRepository.create({
@@ -34,7 +34,7 @@ export class RoleService {
   }
 
   async findAll() {
-    return await this.roleRepository.findAndCount();
+    return await this.roleRepository.find();
   }
 
   async findOne(id: number) {
@@ -43,10 +43,10 @@ export class RoleService {
 
   async update(id: number, data: UpdateRoleDto) {
     const role = await this.getRequestedRoleOrFail(id);
-    if (data.slug != 'admin' && role.isAdmin()) {
+    if (data.slug != "admin" && role.isAdmin()) {
       throw new HttpException(
         "can't update the admin role slug",
-        HttpStatus.CONFLICT,
+        HttpStatus.CONFLICT
       );
     }
 
@@ -57,14 +57,14 @@ export class RoleService {
 
     return await this.roleRepository.findOne({
       where: { id },
-      relations: ['users'],
+      relations: ["users"],
     });
   }
 
   async remove(id: number) {
     await this.getRequestedRoleOrFail(id);
     await this.roleRepository.delete(id);
-    return { message: 'Role was deleted successfullty!' };
+    return { message: "Role was deleted successfullty!" };
   }
 
   async getRoleBySlug(name: string) {
@@ -74,14 +74,14 @@ export class RoleService {
   async getRequestedRoleOrFail(id: number, options?: any) {
     const role = await this.roleRepository.findOneOrFail(id, options);
     if (!role) {
-      throw new HttpException('Role does not exists!', HttpStatus.NOT_FOUND);
+      throw new HttpException("Role does not exists!", HttpStatus.NOT_FOUND);
     }
     return role;
   }
 
   async addPermission(id: number, permission: Permission): Promise<Role> {
     const role = await this.getRequestedRoleOrFail(id, {
-      relations: ['permissions'],
+      relations: ["permissions"],
     });
 
     if (!role.permissions) {
@@ -104,11 +104,11 @@ export class RoleService {
 
   async removePermission(id: number, permission: Permission): Promise<Role> {
     const role = await this.getRequestedRoleOrFail(id, {
-      relations: ['permissions'],
+      relations: ["permissions"],
     });
 
     role.permissions = role.permissions.filter(
-      (per) => per.id != permission.id,
+      (per) => per.id != permission.id
     );
 
     await this.roleRepository.save(role);

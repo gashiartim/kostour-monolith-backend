@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -35,7 +36,7 @@ export class User {
   })
   email: string;
 
-  @Column("text")
+  @Column("text", { select: false })
   @Exclude()
   password: string;
 
@@ -72,5 +73,6 @@ export class User {
   @ManyToOne((type) => Role, (role) => role.users, {
     onDelete: "CASCADE",
   })
+  @JoinColumn({ name: "role_id" })
   role: Role;
 }

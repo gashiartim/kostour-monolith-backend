@@ -1,7 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { applyPaginationToBuilder } from "src/common/PaginationHelpers";
-import { Repository } from "typeorm";
+import { Brackets, Repository } from "typeorm";
+import { CategoryService } from "../category/category.service";
 import { MediaMorph } from "../media/entities/media-morph.entity";
 import { MediaService } from "../media/media.service";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
@@ -14,7 +15,8 @@ export class RestaurantService {
   constructor(
     @InjectRepository(Restaurant)
     private restaurantRepo: Repository<Restaurant>,
-    private readonly mediaService: MediaService
+    private readonly mediaService: MediaService,
+    private readonly categoryService: CategoryService
   ) {}
 
   async create(
@@ -26,10 +28,19 @@ export class RestaurantService {
   ) {
     await this.checkIfRestaurantAlreadyExists(createRestaurantDto.name);
 
-    const { thumbnail, ...restaurant } = createRestaurantDto;
+    const {
+      thumbnail,
+      categories: categoryIds,
+      ...restaurant
+    } = createRestaurantDto;
+
+    const categories = await this.categoryService.getCategories(
+      categoryIds || []
+    );
 
     const newRestaurant = await this.restaurantRepo.create({
       ...restaurant,
+      categories,
     });
 
     await this.restaurantRepo.save(newRestaurant);
@@ -60,6 +71,8 @@ export class RestaurantService {
 
     return await this.restaurantRepo
       .createQueryBuilder("restaurant")
+      .leftJoinAndSelect("restaurant.categories", "category")
+      .leftJoinAndSelect("restaurant.location", "location")
       .leftJoinAndMapOne(
         "restaurant.thumbnail",
         MediaMorph,
@@ -82,10 +95,11 @@ export class RestaurantService {
       .getOne();
   }
 
-  async findAll(pagination: any, options: RestaurantFiltersDto) {
+  async findAll(pagination: any, filters: RestaurantFiltersDto) {
     const queryBuilder = await this.restaurantRepo
       .createQueryBuilder("restaurant")
       .leftJoinAndSelect("restaurant.location", "location")
+      .leftJoinAndSelect("restaurant.categories", "category")
       .leftJoinAndMapOne(
         "restaurant.thumbnail",
         MediaMorph,
@@ -104,6 +118,38 @@ export class RestaurantService {
         { entity: "restaurant", related_field: "images" }
       )
       .leftJoinAndSelect("images.media", "images_media");
+
+    if (filters.category_id) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.andWhere("category.id =:category_id", {
+            category_id: filters.category_id,
+          });
+        })
+      );
+    }
+
+    if (filters.location_id) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.andWhere("location.id =:location_id", {
+            location_id: filters.location_id,
+          });
+        })
+      );
+    }
+
+    if (filters.name) {
+      queryBuilder.andWhere("restaurant.name ilike :restaurant_name", {
+        restaurant_name: `%${filters.name}%`,
+      });
+    }
+
+    if (filters.location_name) {
+      queryBuilder.andWhere("location.name ilike :location_name", {
+        location_name: `%${filters.location_name}%`,
+      });
+    }
 
     applyPaginationToBuilder(queryBuilder, pagination.limit, pagination.page);
 
