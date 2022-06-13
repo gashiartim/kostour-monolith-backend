@@ -14,6 +14,7 @@ import { MulterModule } from "@nestjs/platform-express";
 import { CategoryService } from "../category/category.service";
 import { Category } from "../category/entities/category.entity";
 import { Location } from "../location/entities/location.entity";
+import { LocationsService } from "../location/location.service";
 
 @Module({
   imports: [
@@ -27,6 +28,11 @@ import { Location } from "../location/entities/location.entity";
     MulterModule.register({ ...multerConfig, ...multerOptions }),
   ],
   controllers: [RestaurantController],
-  providers: [RestaurantService, MediaService, CategoryService],
+  providers: [
+    RestaurantService,
+    MediaService,
+    CategoryService,
+    LocationsService,
+  ],
 })
 export class RestaurantModule {}

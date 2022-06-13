@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { applyPaginationToBuilder } from "src/common/PaginationHelpers";
 import { Brackets, Repository } from "typeorm";
 import { CategoryService } from "../category/category.service";
+import { LocationsService } from "../location/location.service";
 import { MediaMorph } from "../media/entities/media-morph.entity";
 import { MediaService } from "../media/media.service";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
@@ -16,7 +17,8 @@ export class RestaurantService {
     @InjectRepository(Restaurant)
     private restaurantRepo: Repository<Restaurant>,
     private readonly mediaService: MediaService,
-    private readonly categoryService: CategoryService
+    private readonly categoryService: CategoryService,
+    private readonly locationService: LocationsService
   ) {}
 
   async create(
@@ -165,7 +167,13 @@ export class RestaurantService {
     updateRestaurantDto: UpdateRestaurantDto,
     file?: Express.Multer.File
   ) {
-    const restaurant = await this.getRestaurantOrFail(id);
+    const { location, ...restaurant } = await this.getRestaurantOrFail(id);
+
+    if (updateRestaurantDto.location_id) {
+      const locationExists = await this.locationService.getLocationOrFail(
+        updateRestaurantDto.location_id
+      );
+    }
 
     await this.restaurantRepo.save(
       Object.assign(restaurant, { ...updateRestaurantDto })
@@ -177,7 +185,7 @@ export class RestaurantService {
       await this.mediaService.uploadFileAndAttachEntity(
         file,
         {
-          entity: "location",
+          entity: "restaurant",
           entity_id: restaurant.id,
           related_field: "thumbnail",
         },

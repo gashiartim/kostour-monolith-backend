@@ -78,6 +78,11 @@ typings/
 # Next.js build output
 .next
 
+.jpeg
+.jpg
+.png
+
+
 # Nuxt.js build / generate output
 .nuxt
 dist
@@ -112,5 +117,11 @@ public/uploads/a8af8c3a-3f13-48dc-ac1c-d9f9913195dd.jpeg
 public/uploads/bf1a8947-7041-4958-9bf2-5d4e11451fd7.jpeg
 public/uploads/cb32c69f-fffd-4ebf-9f96-755ad9a702d5.jpeg
 public/uploads/de5740cd-7458-4891-bf3f-1effb0e48aa2.jpeg
+
+public/uploads/62a0ffb3-76cd-4508-9e57-277d620db2ba.jpg
+public/uploads/a0c6c314-40e6-423d-b107-258a43e06c0e.jpg
+public/uploads/ab4b06b9-2082-4fb2-9564-8106e427ece1.jpg
+public/uploads/cb882d48-21a4-4b43-8c25-ce3dec3d68a4.jpg
+public/uploads/cbf02e3a-d4fe-46eb-bd43-62c4a621bc42.jpeg
 public/uploads/e95403a6-9099-491c-8703-6d569dd7cb8a.jpeg
 public/uploads/fd18a33d-f90f-4d16-8cf0-e7db9a15eeac.jpeg
