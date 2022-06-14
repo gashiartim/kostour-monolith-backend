@@ -123,16 +123,6 @@ export class LocationsService {
     const queryBuilder = await this.locationRepo
       .createQueryBuilder("location")
       .leftJoinAndSelect("location.categories", "category")
-      .leftJoinAndMapOne(
-        "location.thumbnail",
-        MediaMorph,
-        "thumbnail",
-        "thumbnail.entity_id = location.id AND thumbnail.entity = (:entity)",
-        {
-          entity: "location",
-        }
-      )
-      .leftJoinAndSelect("thumbnail.media", "media")
       .leftJoinAndMapMany(
         "location.images",
         MediaMorph,
@@ -140,7 +130,18 @@ export class LocationsService {
         "images.entity_id = location.id AND images.entity = (:entity) AND images.related_field = (:related_field)",
         { entity: "location", related_field: "images" }
       )
-      .leftJoinAndSelect("images.media", "images_media");
+      .leftJoinAndSelect("images.media", "images_media")
+      .leftJoinAndMapOne(
+        "location.thumbnail",
+        MediaMorph,
+        "thumbnail",
+        "thumbnail.entity_id = location.id AND thumbnail.entity = (:entity) AND thumbnail.related_field = (:related_field)",
+        {
+          entity: "location",
+          related_field: "thumbnail",
+        }
+      )
+      .leftJoinAndSelect("thumbnail.media", "media");
 
     if (filters.category_id) {
       queryBuilder.andWhere(
@@ -200,7 +201,7 @@ export class LocationsService {
     }
 
     await this.locationRepo.save(
-      Object.assign(location, { ...updateLocationDto })
+      Object.assign(location, { ...updateLocationDto, categories })
     );
 
     if (file) {
@@ -270,14 +271,6 @@ export class LocationsService {
         { entity: "category" }
       )
       .leftJoinAndSelect("category_thumbnail.media", "category_media")
-      .leftJoinAndMapOne(
-        "location.thumbnail",
-        MediaMorph,
-        "thumbnail",
-        "thumbnail.entity_id = location.id AND thumbnail.entity = (:entity)",
-        { entity: "location" }
-      )
-      .leftJoinAndSelect("thumbnail.media", "media")
       .leftJoinAndMapMany(
         "location.images",
         MediaMorph,
@@ -286,6 +279,17 @@ export class LocationsService {
         { entity: "location", related_field: "images" }
       )
       .leftJoinAndSelect("images.media", "images_media")
+      .leftJoinAndMapOne(
+        "location.thumbnail",
+        MediaMorph,
+        "thumbnail",
+        "thumbnail.entity_id = location.id AND thumbnail.entity = (:location_entity) AND thumbnail.related_field = (:thumbnail_related_field)",
+        {
+          location_entity: "location",
+          thumbnail_related_field: "thumbnail",
+        }
+      )
+      .leftJoinAndSelect("thumbnail.media", "media")
       .leftJoinAndMapMany(
         "location.restaurants",
         Restaurant,
