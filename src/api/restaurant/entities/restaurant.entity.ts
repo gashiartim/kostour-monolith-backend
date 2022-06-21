@@ -11,6 +11,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { Location } from "../../../api/location/entities/location.entity";
+import { User } from "../../../api/user/entities/user.entity";
 
 @Entity("restaurants")
 export class Restaurant {
@@ -36,6 +37,13 @@ export class Restaurant {
   @ManyToMany((type) => Category)
   @JoinTable()
   categories: Category[];
+
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "user_id" })
+  created_by: User;
+
+  @Column({ nullable: true })
+  user_id: string;
 
   @CreateDateColumn({
     type: "timestamp",

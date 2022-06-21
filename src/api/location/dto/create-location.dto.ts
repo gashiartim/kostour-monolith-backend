@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsArray, IsString } from "class-validator";
+import { IsArray, IsOptional, IsString } from "class-validator";
 
 export class CreateLocationDto {
   @ApiProperty()
@@ -13,6 +13,11 @@ export class CreateLocationDto {
   @ApiProperty()
   @IsString()
   whatCanYouDo: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  fullAddress: string;
 
   @ApiProperty()
   @IsArray()

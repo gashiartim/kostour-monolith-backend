@@ -18,4 +18,8 @@ export class RestaurantFiltersDto extends PaginationDto {
   @ApiPropertyOptional()
   @IsOptional()
   name: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  created_by: string;
 }

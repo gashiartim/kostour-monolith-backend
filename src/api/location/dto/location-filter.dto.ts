@@ -10,4 +10,8 @@ export class LocationFiltersDto extends PaginationDto {
   @ApiPropertyOptional()
   @IsOptional()
   category_id: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  created_by: string;
 }

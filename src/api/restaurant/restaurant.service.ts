@@ -153,6 +153,12 @@ export class RestaurantService {
       });
     }
 
+    if (filters.created_by) {
+      queryBuilder.andWhere("restaurant.created_by = (:created_by)", {
+        created_by: filters.created_by,
+      });
+    }
+
     applyPaginationToBuilder(queryBuilder, pagination.limit, pagination.page);
 
     return await queryBuilder.getManyAndCount();

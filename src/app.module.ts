@@ -24,10 +24,15 @@ import { LocationsModule } from "./api/location/location.module";
 import { RestaurantModule } from "./api/restaurant/restaurant.module";
 import { join } from "path";
 import { ServeStaticModule } from "@nestjs/serve-static";
+import { MongooseModule } from "@nestjs/mongoose";
+import { MessagesModule } from "./api/messages/messages.module";
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(),
+    MongooseModule.forRoot(
+      "mongodb+srv://kostourismdb:kostourismdb@cluster0.7hax6.mongodb.net/kostourism"
+    ),
     ConfigModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, "../"),
@@ -39,6 +44,7 @@ import { ServeStaticModule } from "@nestjs/serve-static";
     PermissionModule,
     LocationsModule,
     RestaurantModule,
+    MessagesModule,
     NestEmitterModule.forRoot(new EventEmitter()),
     MailerModule.forRoot({
       transport: {
@@ -64,7 +70,6 @@ import { ServeStaticModule } from "@nestjs/serve-static";
       ...multerConfig,
       ...multerOptions,
     }),
-    RestaurantModule,
   ],
   controllers: [AppController],
   providers: [AppService, MailService, HashService],

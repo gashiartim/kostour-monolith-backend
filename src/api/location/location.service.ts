@@ -123,6 +123,7 @@ export class LocationsService {
     const queryBuilder = await this.locationRepo
       .createQueryBuilder("location")
       .leftJoinAndSelect("location.categories", "category")
+      .leftJoinAndSelect("location.restaurants", "restaurant")
       .leftJoinAndMapMany(
         "location.images",
         MediaMorph,
@@ -156,6 +157,12 @@ export class LocationsService {
     if (filters.name) {
       queryBuilder.andWhere("location.name ilike :location_name", {
         location_name: `%${filters.name}%`,
+      });
+    }
+
+    if (filters.created_by) {
+      queryBuilder.andWhere("location.created_by = (:created_by)", {
+        created_by: filters.created_by,
       });
     }
 

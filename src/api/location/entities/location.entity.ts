@@ -3,12 +3,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { Restaurant } from "../../../api/restaurant/entities/restaurant.entity";
+import { User } from "../../../api/user/entities/user.entity";
 
 @Entity("locations")
 export class Location {
@@ -24,6 +27,9 @@ export class Location {
   @Column({ nullable: false, type: "text" })
   whatCanYouDo: string;
 
+  @Column({ nullable: true, type: "text" })
+  fullAddress: string;
+
   @Column({ nullable: false, type: "integer", default: 0 })
   numberOfVisits: string;
 
@@ -34,6 +40,13 @@ export class Location {
   @ManyToMany((type) => Category)
   @JoinTable()
   categories: Category[];
+
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "user_id" })
+  created_by: User;
+
+  @Column({ nullable: true })
+  user_id: string;
 
   @CreateDateColumn({
     type: "timestamp",
