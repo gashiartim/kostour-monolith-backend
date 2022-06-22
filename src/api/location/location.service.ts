@@ -48,6 +48,7 @@ export class LocationsService {
       description,
       whatCanYouDo,
       categories,
+      user_id: user.id,
     });
 
     await this.locationRepo.save(newLocation);

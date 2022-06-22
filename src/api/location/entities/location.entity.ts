@@ -34,11 +34,20 @@ export class Location {
   numberOfVisits: string;
 
   @ManyToMany((type) => Restaurant)
-  @JoinTable()
+  @JoinTable({
+    name: "restaurant_locations",
+    joinColumn: {
+      name: "location_id",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "restaurant_id",
+      referencedColumnName: "id",
+    },
+  })
   restaurants: Restaurant[];
 
-  @ManyToMany((type) => Category)
-  @JoinTable()
+  @ManyToMany((type) => Category, (category) => category.locations)
   categories: Category[];
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })

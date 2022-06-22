@@ -1,7 +1,10 @@
+import { Location } from "../../../api/location/entities/location.entity";
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -32,6 +35,20 @@ export class Category {
 
   @Column({ type: "boolean", nullable: false, default: false })
   top_category: boolean;
+
+  @ManyToMany((type) => Location, (location) => location.categories)
+  @JoinTable({
+    name: "category_locations",
+    joinColumn: {
+      name: "category_id",
+      referencedColumnName: "id",
+    },
+    inverseJoinColumn: {
+      name: "location_id",
+      referencedColumnName: "id",
+    },
+  })
+  locations: Location[];
 
   @CreateDateColumn({
     type: "timestamp",

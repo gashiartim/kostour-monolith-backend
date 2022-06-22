@@ -2,12 +2,14 @@ import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import slugify from "slugify";
 import { In, Repository } from "typeorm";
+import { Location } from "../location/entities/location.entity";
 import { MediaMorph } from "../media/entities/media-morph.entity";
 import { Media } from "../media/entities/media.entity";
 import { MediaService } from "../media/media.service";
 import { CategoryFilters } from "./dto/category-filters.dto";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
+import { CategoryLocation } from "./entities/category-location.entity";
 import { Category } from "./entities/category.entity";
 
 @Injectable()
@@ -83,6 +85,12 @@ export class CategoryService {
   async findAll(options: CategoryFilters) {
     const categories = this.categoryRepository
       .createQueryBuilder("category")
+      .leftJoinAndMapMany(
+        "category.locations",
+        CategoryLocation,
+        "category_locations",
+        "category.id = category_locations.category_id"
+      )
       .leftJoinAndMapMany(
         "category.sub_categories",
         Category,
